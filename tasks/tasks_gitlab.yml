@@ -80,7 +80,7 @@
       - gitlab
 
   - name: Gitlab | Install gitlab shell
-    shell: bundle exec rake gitlab:shell:install[v1.9.4] REDIS_URL=redis://localhost:6379 RAILS_ENV=production
+    shell: bundle exec rake gitlab:shell:install REDIS_URL=redis://localhost:6379 RAILS_ENV=production
     args:
       chdir: "{{gitlab_base_dir}}/gitlab"
     become: yes
@@ -106,13 +106,15 @@
       creates: "{{gitlab_base_dir}}/gitlab-workhorse/gitlab-workhorse"
     become: yes
     become_user: git
+    environment:
+          PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
     tags:
       - gitlab
 
   - name: Gitlab | Init DB
     shell: yes 'yes' | bundle exec rake gitlab:setup RAILS_ENV=production && touch .dbprovisioned
     args:
-      chdir: "{{gitlab_base_dir}}"
+      chdir: "{{gitlab_base_dir}}/gitlab"
       creates: "{{gitlab_base_dir}}/gitlab/.dbprovisioned"
     become: yes
     become_user: git
@@ -122,7 +124,7 @@
   - name: Gitlab |  setup logrotate
     command: cp lib/support/logrotate/gitlab /etc/logrotate.d/gitlab
     args:
-      chdir: "{{gitlab_base_dir}}"
+      chdir: "{{gitlab_base_dir}}/gitlab"
       creates: /etc/logrotate.d/gitlab
     become: yes
     become_user: git
@@ -132,7 +134,7 @@
   - name: Gitlab | compile assets
     command: bundle exec rake assets:precompile RAILS_ENV=production
     args:
-      chdir: "{{gitlab_base_dir}}"
+      chdir: "{{gitlab_base_dir}}/gitlab"
       creates: "{{gitlab_base_dir}}/gitlab/public/assets/bootstrap"
     become: yes
     become_user: git
@@ -143,5 +145,5 @@
     become: yes
     command: cp lib/support/init.d/gitlab /etc/init.d/gitlab
     args:
-      chdir: "{{gitlab_base_dir}}"
+      chdir: "{{gitlab_base_dir}}/gitlab"
       creates: /etc/init.d/gitlab

@@ -11,7 +11,8 @@
   option_ruby_install_setsystem: true
   option_install_nginx: true
   option_install_redis: true
-  option_install_redis_commander: false  
+  option_install_redis_commander: false
+  option_install_go: true
 
 # gitlab
   gitlab_version: master
@@ -159,4 +160,8 @@
 
   redis_properties:
     - {regexp: "^bind *", line: "bind {{redis_bind_to}}"}
+    - {regexp: "^unixsocket *", line: "unixsocket /var/run/redis/redis.sock"}
+    - {regexp: "^unixsocketperm *", line: "unixsocketperm 777"}
+
+
 #   - {regexp: "^requirepass *", line:"requirepass YOUR_SECURE_PASS"}  # Secure redis with $
