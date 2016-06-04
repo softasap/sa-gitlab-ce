@@ -1,0 +1,162 @@
+---
+# defaults file for sa-gitlab-ce
+
+  role_dir: "{{ role_path }}"
+  root_dir: "{{ role_path }}"
+  ssh_dir: "/home/{{ansible_user_id}}"
+
+  option_install_nodejs: true
+  option_install_postgres: true
+  option_install_ruby: true
+  option_ruby_install_setsystem: true
+  option_install_nginx: true
+  option_install_redis: true
+  option_install_redis_commander: false  
+
+# gitlab
+  gitlab_version: master
+  gitlab_repo_url: https://gitlab.com/gitlab-org/gitlab-ce.git
+  gitlab_external_url: http://gitlab.lvh.me
+  gitlab_host: git.lvh.me
+  gitlab_port: 443
+  gitlab_https: true
+
+  gitlab_base_dir: /home/git
+  gitlab_repos_path: "{{gitlab_base_dir}}/repositories/"
+  gitlab_authorized_keys: "{{gitlab_base_dir}}/.ssh/authorized_keys"
+  gitlab_db_key_base: N1seGKyllvLIO2v9LA2B
+
+  gitlab_dirs:
+    - {
+      path: '{{gitlab_base_dir}}/gitlab/log',
+      permissions: "744"
+      }
+    - {
+      path: '{{gitlab_base_dir}}/gitlab/tmp',
+      permissions: "777"
+      }
+    - {
+      path: '{{gitlab_base_dir}}/gitlab/tmp/pids',
+      permissions: "777"
+      }
+    - {
+      path: '{{gitlab_base_dir}}/gitlab/tmp/sockets',
+      permissions: "777"
+      }
+    - {
+      path: '{{gitlab_base_dir}}/gitlab/public/uploads',
+      permissions: "700"
+      }
+    - {
+      path: '{{gitlab_base_dir}}/gitlab-satellites',
+      permissions: "700"
+      }
+
+    - {
+      path: '{{gitlab_base_dir}}/gitlab/public/builds',
+      permissions: "700"
+      }
+    - {
+      path: '{{gitlab_base_dir}}/gitlab/shared/artifacts',
+      permissions: "700"
+      }
+
+  gitlab_copy_configs:
+    - {
+      src: 'gitlab.rb',
+      dest: 'gitlab.rb'
+      }
+    - {
+      src: 'rack_attack.rb',
+      dest: '{{gitlab_base_dir}}/gitlab/config/initializers/rack_attack.rb'
+      }
+    - {
+      src: 'unicorn.rb',
+      dest: '{{gitlab_base_dir}}/gitlab/config/unicorn.rb'
+      }
+
+  gitlab_template_configs:
+    - {
+      src: '{{role_dir}}/templates/gitlab/secrets.yml.j2',
+      dest: '{{gitlab_base_dir}}/gitlab/config/secrets.yml'
+      }
+    - {
+      src: '{{role_dir}}/templates/gitlab/database.yml.j2',
+      dest: '{{gitlab_base_dir}}/gitlab/config/database.yml'
+      }
+    - {
+      src: '{{role_dir}}/templates/gitlab/resque.yml.j2',
+      dest: '{{gitlab_base_dir}}/gitlab/config/resque.yml'
+      }
+    - {
+      src: '{{role_dir}}/templates/gitlab/gitlab.yml.j2',
+      dest: '{{gitlab_base_dir}}/gitlab/config/gitlab.yml'
+      }
+
+# according to https://gitlab.com/gitlab-org/gitlab-ce/blob/master/doc/install/installation.md
+  needed_packages:
+    - build-essential
+    - libssl-dev
+    - libyaml-dev
+    - git
+    - libcurl4-openssl-dev
+    - htop
+    - zlib1g-dev
+    - libgdbm-dev
+    - libreadline-dev
+    - libncurses5-dev
+    - libffi-dev
+    - curl
+    - openssh-server
+    - checkinstall
+    - libxml2-dev
+    - libxslt-dev
+    - libcurl4-openssl-dev
+    - libicu-dev
+    - logrotate
+    - python-docutils
+    - pkg-config
+    - cmake
+
+# ruby dependency
+  rubies_location: /opt/rubies
+  chruby_version: 0.3.9
+  ruby_install_version: 0.6.0
+  ruby_install_setsystem: true
+  ruby_version: 2.1.9
+
+# node dependency
+  nodejs_version: "0.12" # 0.10 0.12 4.x 5.x
+
+# postgres dependency
+  option_create_app_user: true
+
+  postgresql_version: 9.4
+
+  postgresql_listen_addresses: localhost  # * for any address
+  postgres_force_change_peer_md5: true
+
+  postgresql_port: 5432
+
+  # Set remotely to allow listening
+  #postgres_app_network: "192.168.0.1/32"
+  #postgres_app_network_regex: "192\.168\.0\.1\/32"
+
+  # Set remotely to allow listening
+  #postgres_dev_network: "192.168.0.1/32"
+  #postgres_dev_network_regex: "192\.168\.0\.1\/32"
+
+  db_host: localhost
+  db_user: git
+  db_password: app_password
+  db_name: gitlabhq_production
+
+# node dependency
+
+# redis_dependency
+
+  redis_bind_to: 127.0.0.1
+
+  redis_properties:
+    - {regexp: "^bind *", line: "bind {{redis_bind_to}}"}
+#   - {regexp: "^requirepass *", line:"requirepass YOUR_SECURE_PASS"}  # Secure redis with $

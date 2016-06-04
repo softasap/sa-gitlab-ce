@@ -1,0 +1,147 @@
+---
+  # from source, see https://gitlab.com/gitlab-org/gitlab-ce/blob/master/doc/install/installation.md
+  - name: Gitlab | create user
+    user: name=git comment="'GitLab' git" group=users #shell=/sbin/nologin createhome=no
+    become: yes
+    tags:
+      - gitlab
+
+  - name: Gitlab | Register postgre extension
+    postgresql_ext: name=pg_trgm db="{{db_name}}" login_user="{{db_user}}" login_password="{{db_password}}"
+    tags:
+      - gitlab
+
+
+  - name: Gitlab | Ensure gitlab base dir present
+    file: name="{{gitlab_base_dir}}" state="directory" owner="git"
+    become: yes
+    tags:
+      - gitlab
+
+
+  - name: Gitlab | Clone of gitlab repository
+    git:
+      repo: "{{ gitlab_repo_url }}"
+      dest: "{{gitlab_base_dir}}/gitlab"
+      version: "{{ gitlab_version | default('master') }}"
+      update: no
+    become: yes
+    become_user: git
+    tags:
+      - gitlab
+
+  - name: Gitlab | prepare directories
+    file:
+      path: "{{item.path}}"
+      owner: git
+      mode: "{{item.permissions}}"
+      state: directory
+      recurse: yes
+    with_items: "{{gitlab_dirs}}"
+    become: yes
+    tags:
+      - gitlab
+
+  - name: Gitlab | template configs
+    template:
+      src: "{{item.src}}"
+      dest: "{{item.dest}}"
+      owner: git
+      mode: 0600
+    with_items: "{{gitlab_template_configs}}"
+    become: yes
+    tags:
+      - gitlab
+
+  - include: use/__detect_ruby_path.yml deploy_user=git
+
+  - name: Gitlab | Install Bundler
+    gem: name=bundler state=latest
+    become: yes
+    become_user: git
+    when: not ruby_is_global
+    tags:
+      - gitlab
+
+  - name: Gitlab | Install Bundler
+    gem: name=bundler state=latest
+    become: yes
+    when: ruby_is_global
+    tags:
+      - gitlab
+
+  - name: Gitlab | Install for postgres
+    shell: bundle install --deployment --without development test mysql aws
+    args:
+      chdir: "{{gitlab_base_dir}}/gitlab"
+    become: yes
+    become_user: git
+    tags:
+      - gitlab
+
+  - name: Gitlab | Install gitlab shell
+    shell: bundle exec rake gitlab:shell:install[v1.9.4] REDIS_URL=redis://localhost:6379 RAILS_ENV=production
+    args:
+      chdir: "{{gitlab_base_dir}}/gitlab"
+    become: yes
+    become_user: git
+    tags:
+      - gitlab
+
+  - name: Gitlab | install Gitlab workhorse
+    git:
+      repo: https://gitlab.com/gitlab-org/gitlab-workhorse.git
+      dest: "{{gitlab_base_dir}}/gitlab-workhorse"
+      version: "{{ gitlab_workhorse_version | default(omit) }}" #tag
+      update: no
+    become: yes
+    become_user: git
+    tags:
+      - gitlab
+
+  - name: Gitlab | run workhorse make
+    shell: make
+    args:
+      chdir: "{{gitlab_base_dir}}/gitlab-workhorse"
+      creates: "{{gitlab_base_dir}}/gitlab-workhorse/gitlab-workhorse"
+    become: yes
+    become_user: git
+    tags:
+      - gitlab
+
+  - name: Gitlab | Init DB
+    shell: yes 'yes' | bundle exec rake gitlab:setup RAILS_ENV=production && touch .dbprovisioned
+    args:
+      chdir: "{{gitlab_base_dir}}"
+      creates: "{{gitlab_base_dir}}/gitlab/.dbprovisioned"
+    become: yes
+    become_user: git
+    tags:
+      - gitlab
+
+  - name: Gitlab |  setup logrotate
+    command: cp lib/support/logrotate/gitlab /etc/logrotate.d/gitlab
+    args:
+      chdir: "{{gitlab_base_dir}}"
+      creates: /etc/logrotate.d/gitlab
+    become: yes
+    become_user: git
+    tags:
+      - gitlab
+
+  - name: Gitlab | compile assets
+    command: bundle exec rake assets:precompile RAILS_ENV=production
+    args:
+      chdir: "{{gitlab_base_dir}}"
+      creates: "{{gitlab_base_dir}}/gitlab/public/assets/bootstrap"
+    become: yes
+    become_user: git
+    tags:
+      - gitlab
+
+  - name:  Gitlab | install init script
+    become: yes
+    command: cp lib/support/init.d/gitlab /etc/init.d/gitlab
+    args:
+      chdir: "{{gitlab_base_dir}}"
+      creates: /etc/init.d/gitlab

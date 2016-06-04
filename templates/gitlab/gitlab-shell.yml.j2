@@ -1,0 +1,14 @@
+
+---
+user: git
+gitlab_url: "{{ gitlab_external_url }}"
+http_settings:
+  self_signed_cert: {{self_signed_cert |  default(false)}}
+repos_path: "{{ gitlab_repos_path }}"
+auth_file: "{{ gitlab_authorized_keys }}"
+redis:
+  bin: "/usr/bin/redis-cli"
+  namespace: resque:gitlab
+  socket: "/var/run/redis/redis.sock"
+log_level: INFO
+audit_usernames: false

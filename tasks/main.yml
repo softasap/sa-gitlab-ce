@@ -1,0 +1,20 @@
+---
+# tasks file for sa-gitlab-ce
+  - include: node/main.yml
+    when: option_install_nodejs
+
+  - include: ruby/main.yml
+    when: option_install_ruby
+
+  - include: postgres/main.yml
+    when: option_install_postgres
+
+  - name: Gitlab | Force restart postgres to apply changes
+    service: name="postgresql" state="restarted"
+    become: yes
+    when: option_install_postgres
+
+  - include: nginx/main.yml
+    when: option_install_nginx
+
+  - include: tasks_gitlab.yml

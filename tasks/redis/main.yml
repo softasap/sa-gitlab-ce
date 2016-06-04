@@ -1,0 +1,6 @@
+---
+# tasks file for sa-redis
+  - include: tasks_redis.yml
+
+  - include: tasks_redis_commander.yml
+    when: option_install_redis_commander

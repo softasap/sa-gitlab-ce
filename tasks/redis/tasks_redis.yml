@@ -1,0 +1,17 @@
+# According to http://redis.io/documentation
+---
+
+  - name: Redis | Install package
+    apt: pkg="redis-server" state="present" update_cache="yes"
+    become: yes
+    tags:
+      - redis
+
+  - name: Redis | Patch basic settings /etc/redis/redis.conf
+    lineinfile: dest=/etc/redis/redis.conf  regexp="{{item.regexp}}" line="{{item.line}}" insertafter="{{item.insertafter | default('EOF')}}"
+    with_items: "{{redis_properties | default([])}}"
+    notify: restart redis
+    become: yes
+    tags:
+     - redis
+

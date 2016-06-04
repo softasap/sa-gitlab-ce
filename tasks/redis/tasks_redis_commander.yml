@@ -1,0 +1,26 @@
+---
+  - name: REDIS | Detect npm
+    shell: 'source /home/{{deploy_user}}/.profile && dirname "`which npm`"'
+    args:
+       executable: /bin/bash
+    register: npm_path_detected_raw
+    tags:
+      - redis
+    
+
+  - set_fact:
+      npm_path_detected: "{{ npm_path_detected_raw.stdout }}"
+      npm_is_global: "{{npm_path_detected_raw.stdout.find('.nvm') == -1}}"
+    tags:
+      - redis
+
+
+  - name: REDIS | Install redis commander
+    npm: name={{ item }} state=present global=yes executable="{{npm_path_detected}}/npm"
+    with_items:
+      - redis-commander
+    become: "{{npm_is_global}}"
+    environment:
+      PATH: "{{npm_path_detected}}:{{ ansible_env.PATH }}"       # can be different depending on nvm version
+    tags:
+      - redis
