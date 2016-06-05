@@ -64,7 +64,7 @@
       - gitlab
 
   - name: Gitlab | Install Bundler
-    gem: name=bundler state=latest
+    shell: gem install bundler --no-ri --no-rdoc
     become: yes
     when: ruby_is_global
     tags:
@@ -127,7 +127,6 @@
       chdir: "{{gitlab_base_dir}}/gitlab"
       creates: /etc/logrotate.d/gitlab
     become: yes
-    become_user: git
     tags:
       - gitlab
 
