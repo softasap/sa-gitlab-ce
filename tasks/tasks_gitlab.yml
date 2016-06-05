@@ -1,7 +1,14 @@
 ---
   # from source, see https://gitlab.com/gitlab-org/gitlab-ce/blob/master/doc/install/installation.md
+
+  - name: Gitlab | create gitlab group
+    group: name=git state=present
+    become: yes
+    tags:
+      - gitlab
+
   - name: Gitlab | create user
-    user: name=git comment="'GitLab' git" group=users #shell=/sbin/nologin createhome=no
+    user: name=git comment="'GitLab' git" group=git #shell=/sbin/nologin createhome=no
     become: yes
     tags:
       - gitlab
@@ -34,10 +41,30 @@
     file:
       path: "{{item.path}}"
       owner: git
+      group: git
       mode: "{{item.permissions}}"
       state: directory
       recurse: yes
     with_items: "{{gitlab_dirs}}"
+    become: yes
+    tags:
+      - gitlab
+
+    #doc/install/installation.md in section "GitLab Shell"
+  - name: Gitlab | prepare directories
+    shell: "chmod -R ug+rwX,o-rwx {{gitlab_base_dir}}/repositories/"
+    become: yes
+    tags:
+      - gitlab
+
+  - name: Gitlab | prepare directories
+    shell: "chmod -R ug-s {{gitlab_base_dir}}/repositories/"
+    become: yes
+    tags:
+      - gitlab
+
+  - name: Gitlab | prepare directories
+    shell: "find {{gitlab_base_dir}}/repositories/ -type d -print0 | sudo xargs -0 chmod g+s"
     become: yes
     tags:
       - gitlab
@@ -140,9 +167,38 @@
     tags:
       - gitlab
 
-  - name:  Gitlab | install init script
+  - name: Gitlab | GIT - configure git settings
+    shell: /usr/bin/git config --global core.autocrlf "input"
+    become: yes
+    become_user: git
+    tags:
+      - gitlab
+
+
+  - name:  Gitlab | UPSTART -  install init script
     become: yes
     command: cp lib/support/init.d/gitlab /etc/init.d/gitlab
     args:
       chdir: "{{gitlab_base_dir}}/gitlab"
       creates: /etc/init.d/gitlab
+
+  - name:  Gitlab | NGINX - Generate self signed certs
+    include: use/__create_selfsigned_cert.yml key=gitlab crt=gitlab fqdn="{{gitlab_host}}" target_dir=/etc/nginx
+
+  - name: Gitlab | template nginx config
+    template: src="{{role_dir}}/templates/nginx/nginx_https.conf.j2" dest="/etc/nginx/sites-enabled/gitlab"
+    become: yes
+    tags:
+      - gitlab
+
+  - name: Gitlab | restart nginx
+    service: name="nginx" state="restarted"
+    become: yes
+    tags:
+      - gitlab
+
+  - name: Gitlab | restart gitlab
+    service: name="gitlab" state="restarted"
+    become: yes
+    tags:
+      - gitlab

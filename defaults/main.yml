@@ -13,6 +13,7 @@
   option_install_redis: true
   option_install_redis_commander: false
   option_install_go: true
+  option_install_git: true
 
 # gitlab
   gitlab_version: "v8.8.3"
@@ -62,6 +63,7 @@
       permissions: "700"
       }
 
+
   gitlab_copy_configs:
     - {
       src: 'gitlab.rb',
@@ -71,10 +73,7 @@
       src: 'rack_attack.rb',
       dest: '{{gitlab_base_dir}}/gitlab/config/initializers/rack_attack.rb'
       }
-    - {
-      src: 'unicorn.rb',
-      dest: '{{gitlab_base_dir}}/gitlab/config/unicorn.rb'
-      }
+
 
   gitlab_template_configs:
     - {
@@ -92,6 +91,10 @@
     - {
       src: '{{role_dir}}/templates/gitlab/gitlab.yml.j2',
       dest: '{{gitlab_base_dir}}/gitlab/config/gitlab.yml'
+      }
+    - {
+      src: '{{role_dir}}/templates/gitlab/unicorn.rb.j2',
+      dest: '{{gitlab_base_dir}}/gitlab/config/unicorn.rb'
       }
 
 # according to https://gitlab.com/gitlab-org/gitlab-ce/blob/master/doc/install/installation.md
