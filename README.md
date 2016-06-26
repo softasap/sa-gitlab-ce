@@ -66,7 +66,7 @@ Install GitLab EE edition:
         option_install_go: true,
         option_install_git: true,
 
-        gitlab_version: "v8.9.1",
+        gitlab_version: "v8.9.1-ee",
         gitlab_repo_url: "https://gitlab.com/gitlab-org/gitlab-ee.git",
         gitlab_external_url: http://gitlab.lvh.me,
         gitlab_host: git.lvh.me,
