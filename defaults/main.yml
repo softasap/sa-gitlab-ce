@@ -16,7 +16,7 @@
   option_install_git: true
 
 # gitlab
-  gitlab_version: "v8.8.3"
+  gitlab_version: "v8.9.1"
   gitlab_repo_url: https://gitlab.com/gitlab-org/gitlab-ce.git
   gitlab_external_url: http://gitlab.lvh.me
   gitlab_host: git.lvh.me
@@ -53,7 +53,6 @@
       path: '{{gitlab_base_dir}}/gitlab-satellites',
       permissions: "700"
       }
-
     - {
       path: '{{gitlab_base_dir}}/gitlab/public/builds',
       permissions: "700"
@@ -62,7 +61,10 @@
       path: '{{gitlab_base_dir}}/gitlab/shared/artifacts',
       permissions: "700"
       }
-
+    - {
+      path: '{{gitlab_base_dir}}/repositories',
+      permissions: "700"
+      }
 
   gitlab_copy_configs:
     - {
