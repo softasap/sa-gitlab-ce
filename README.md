@@ -29,9 +29,9 @@ Advanced:
         option_install_redis: true,
         option_install_redis_commander: false,
         option_install_go: true,
-        option_install_git: true,    
+        option_install_git: true,
 
-        gitlab_version: "v8.8.3",
+        gitlab_version: "v8.9.1",
         gitlab_external_url: http://gitlab.lvh.me,
         gitlab_host: git.lvh.me,
         gitlab_port: 443,
@@ -43,10 +43,48 @@ Advanced:
         db_host: localhost,
         db_user: git,
         db_password: app_password,
-        db_name: gitlabhq_production                   
+        db_name: gitlabhq_production
       }
 
-</pre>      
+</pre>
+
+Install GitLab EE edition:
+
+<pre>
+
+  roles:
+    - {
+        role: "sa-gitlab-ce",
+
+        option_install_nodejs: true,
+        option_install_postgres: true,
+        option_install_ruby: true,
+        option_ruby_install_setsystem: true,
+        option_install_nginx: true,
+        option_install_redis: true,
+        option_install_redis_commander: false,
+        option_install_go: true,
+        option_install_git: true,
+
+        gitlab_version: "v8.9.1-ee",
+        gitlab_repo_url: "https://gitlab.com/gitlab-org/gitlab-ee.git",
+        gitlab_external_url: http://gitlab.lvh.me,
+        gitlab_host: git.lvh.me,
+        gitlab_port: 443,
+        gitlab_https: true,
+
+        gitlab_db_key_base: N1seGKyllvLIO2v9LA2B,
+
+        # postgres
+        db_host: localhost,
+        db_user: git,
+        db_password: app_password,
+        db_name: gitlabhq_production
+      }
+
+</pre>
+
+
 
 # Troubleshouting
 
