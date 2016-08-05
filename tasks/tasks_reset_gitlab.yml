@@ -1,0 +1,11 @@
+---
+  - name: Gitlab | template update files
+    template: src="{{role_dir}}/templates/gitlab_update/gitlab_update.sh.j2" dest="/home/{{ansible_user_id}}/gitlab_update.sh" mode="u=rwx,g=rx,o=r"
+    tags:
+      - gitlab
+
+  - name: Gitlab | template update files
+    template: src="{{role_dir}}/templates/gitlab_update/gitlab_update_self.sh.j2" dest="/home/git/gitlab_update.sh" owner="git" mode="u=rwx,g=rx,o=r"
+    become: yes
+    tags:
+      - gitlab

@@ -2,11 +2,22 @@
     postgresql_db: name={{db_name}}
     become_user: postgres
     become: yes
+    when: not postgres_force_change_postgres_local_trust
     tags: db
 
   - name: Database | Create user
     postgresql_user: name={{db_user}} password={{db_password}} role_attr_flags=SUPERUSER
     become_user: postgres
     become: yes
+    when: not postgres_force_change_postgres_local_trust
     tags: db
 
+  - name: Database | Create db
+    postgresql_db: name={{db_name}}
+    when: postgres_force_change_postgres_local_trust
+    tags: db
+
+  - name: Database | Create user
+    postgresql_user: name={{db_user}} password={{db_password}} role_attr_flags=SUPERUSER
+    when: postgres_force_change_postgres_local_trust    
+    tags: db

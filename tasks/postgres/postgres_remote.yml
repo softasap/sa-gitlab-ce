@@ -16,3 +16,9 @@
     when: postgres_force_change_peer_md5 | default(false)
     become: yes
     tags: db
+
+  - name: Database | Change postgres auth for local to trust (ansible 2.0 issue)
+    lineinfile: dest="/etc/postgresql/{{postgresql_version}}/main/pg_hba.conf" regexp="^(\s*)local\tall\tpostgres\t\tpeer$" line="local   all             postgres                                trust" insertafter="^# Database administrative login by Unix domain socket"
+    when: postgres_force_change_postgres_local_trust | default(false)
+    become: yes
+    tags: db
