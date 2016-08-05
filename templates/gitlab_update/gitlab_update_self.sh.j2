@@ -87,6 +87,13 @@ sudo service nginx restart
 # To make sure you didn't miss anything run a more thorough check with:
  bundle exec rake gitlab:check RAILS_ENV=production
 
+ # Remove namespaces(dirs) from all repository storage paths if they don't exist in GitLab database
+ bundle exec rake gitlab:cleanup:dirs RAILS_ENV=production
+
+ # Rename repositories from all repository storage paths if they don't exist in GitLab database. The repositories get a +orphaned+TIMESTAMP suffix so that they cannot block new repositories from being created.
+ bundle exec rake gitlab:cleanup:repos RAILS_ENV=production
+
+
 ## Exit successfuly
 exit 0
 

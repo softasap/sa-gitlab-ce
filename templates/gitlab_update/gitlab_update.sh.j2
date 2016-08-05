@@ -12,6 +12,20 @@ LATEST_TAG={{gitlab_version}}
 [[ ! -d "${GL_HOME}/gitlab-shell" ]] && echo "'${GL_HOME}/gitlab-workhorse' doesn't exist. Exiting..." && exit 124
 
 ### Start the ball
+
+## Fix file & folder rights
+
+echo "Resetting file rights for "
+sudo chmod -R ug+rwX,o-rwx ${GL_HOME}/repositories/
+sudo chmod -R ug-s ${GL_HOME}/repositories/
+sudo find ${GL_HOME}/repositories/ -type d -print0 | sudo xargs -0 chmod g+s
+
+
+sudo chown -R git ${GL_HOME}/gitlab/public/uploads
+sudo find ${GL_HOME}/gitlab/public/uploads -type f -exec chmod 0644 {} \;
+sudo find ${GL_HOME}/gitlab/public/uploads -type d -not -path ${GL_HOME}/gitlab/public/uploads -exec chmod 0700 {} \;
+
+
 ## Backup
 echo "Backup stage"
 cd "${GL_HOME}"/gitlab
@@ -87,7 +101,18 @@ sudo -u git -H bundle exec rake gitlab:env:info RAILS_ENV=production
 # To make sure you didn't miss anything run a more thorough check with:
 sudo -u git -H bundle exec rake gitlab:check RAILS_ENV=production
 
+# Remove namespaces(dirs) from all repository storage paths if they don't exist in GitLab database
+sudo -u git -H bundle exec rake gitlab:cleanup:dirs RAILS_ENV=production REMOVE=true
+
+# Rename repositories from all repository storage paths if they don't exist in GitLab database. The repositories get a +orphaned+TIMESTAMP suffix so that they cannot block new repositories from being created.
+sudo -u git -H bundle exec rake gitlab:cleanup:repos RAILS_ENV=production REMOVE=true
+
+
 ## Exit successfuly
 exit 0
 
 ### EOF
+
+# Last chance commands
+# bundle exec rails console production
+# bundle exec rake gitlab:setup console production
