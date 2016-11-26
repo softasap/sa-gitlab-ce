@@ -1,0 +1,118 @@
+#!/bin/bash -e
+
+# Set variables
+GL_HOME="{{ gitlab_base_dir }}"
+
+LATEST_TAG={{gitlab_version}}
+
+# Sanity checks
+[[ ! -d "${GL_HOME}" ]] && echo "'${GL_HOME}' doesn't exist. Exiting..." && exit 127
+[[ ! -d "${GL_HOME}/gitlab" ]] && echo "'${GL_HOME}/gitlab' doesn't exist. Exiting..." && exit 126
+[[ ! -d "${GL_HOME}/gitlab-shell" ]] && echo "'${GL_HOME}/gitlab-shell' doesn't exist. Exiting..." && exit 125
+[[ ! -d "${GL_HOME}/gitlab-shell" ]] && echo "'${GL_HOME}/gitlab-workhorse' doesn't exist. Exiting..." && exit 124
+
+### Start the ball
+
+## Fix file & folder rights
+
+echo "Resetting file rights for "
+sudo chmod -R ug+rwX,o-rwx ${GL_HOME}/repositories/
+sudo chmod -R ug-s ${GL_HOME}/repositories/
+sudo find ${GL_HOME}/repositories/ -type d -print0 | sudo xargs -0 chmod g+s
+
+
+sudo chown -R git ${GL_HOME}/gitlab/public/uploads
+sudo find ${GL_HOME}/gitlab/public/uploads -type f -exec chmod 0644 {} \;
+sudo find ${GL_HOME}/gitlab/public/uploads -type d -not -path ${GL_HOME}/gitlab/public/uploads -exec chmod 0700 {} \;
+
+
+## Backup
+echo "Backup stage"
+cd "${GL_HOME}"/gitlab
+sudo -u git -H bundle exec rake gitlab:backup:create RAILS_ENV=production
+
+## Stop the server
+sudo service gitlab stop
+
+## Get the latest updates
+cd "${GL_HOME}"/gitlab
+echo "Checking out gitlab for $LATEST_TAG"
+sudo -u git -H git fetch --all
+sudo -u git -H git checkout -- Gemfile.lock db/schema.rb
+sudo -u git -H git checkout $LATEST_TAG
+
+## Update gitlab-shell to the corresponding version
+cd "${GL_HOME}"/gitlab-shell
+echo "Checking out gitlab-shell for:"
+echo v`cat ${GL_HOME}/gitlab/GITLAB_SHELL_VERSION`
+sudo -u git -H git fetch
+sudo -u git -H git checkout v`cat ${GL_HOME}/gitlab/GITLAB_SHELL_VERSION`
+
+## Update gitlab-workhorse to the corresponding version
+cd "${GL_HOME}"/gitlab-workhorse
+echo "Checking out gitlab-workhorse for:"
+echo v`cat ${GL_HOME}/gitlab/GITLAB_WORKHORSE_VERSION`
+sudo -u git -H git fetch
+sudo -u git -H git checkout v`cat ${GL_HOME}/gitlab/GITLAB_WORKHORSE_VERSION`
+sudo -u git -H . /etc/profile.d/go_path.sh && make
+
+# Install libs, migrations, etc.
+cd "${GL_HOME}"/gitlab
+
+# MySQL
+#sudo -u git -H bundle install --without development test postgres --deployment
+
+# PostgreSQL
+sudo -u git -H bundle install --without development test mysql --deployment
+
+# Optional: clean up old gems
+sudo -u git -H bundle clean
+
+# Run database migrations
+sudo -u git -H bundle exec rake db:migrate RAILS_ENV=production
+
+# Clean up assets and cache
+sudo -u git -H bundle exec rake assets:clean assets:precompile cache:clear RAILS_ENV=production
+
+## Start application
+sudo service gitlab start
+sudo service nginx restart
+
+## Check application status
+# Check if GitLab and its environment are configured correctly:
+sudo -u git -H bundle exec rake gitlab:env:info RAILS_ENV=production
+
+# To make sure you didn't miss anything run a more thorough check with:
+
+# Run database migrations
+sudo -u git -H bundle exec rake db:migrate RAILS_ENV=production
+
+# Clean up assets and cache
+sudo -u git -H bundle exec rake assets:clean assets:precompile cache:clear RAILS_ENV=production
+
+## Start application
+sudo service gitlab start
+sudo service nginx restart
+
+## Check application status
+# Check if GitLab and its environment are configured correctly:
+sudo -u git -H bundle exec rake gitlab:env:info RAILS_ENV=production
+
+# To make sure you didn't miss anything run a more thorough check with:
+sudo -u git -H bundle exec rake gitlab:check RAILS_ENV=production
+
+# Remove namespaces(dirs) from all repository storage paths if they don't exist in GitLab database
+sudo -u git -H bundle exec rake gitlab:cleanup:dirs RAILS_ENV=production REMOVE=true
+
+# Rename repositories from all repository storage paths if they don't exist in GitLab database. The repositories get a +orphaned+TIMESTAMP suffix so that they cannot block new repositories from being created.
+sudo -u git -H bundle exec rake gitlab:cleanup:repos RAILS_ENV=production REMOVE=true
+
+
+## Exit successfuly
+exit 0
+
+### EOF
+
+# Last chance commands
+# bundle exec rails console production
+# bundle exec rake gitlab:setup console production

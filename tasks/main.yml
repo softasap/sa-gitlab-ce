@@ -1,6 +1,51 @@
 ---
 # tasks file for sa-gitlab-ce
 
+  - set_fact:
+      option_install_nodejs: "{{'false' | bool}}"
+    when: option_install_nodejs == "false"
+
+  - set_fact:
+      option_install_postgres: "{{'false' | bool}}"
+    when: option_install_postgres == "false"
+
+  - set_fact:
+      option_install_ruby: "{{'false' | bool}}"
+    when: option_install_ruby == "false"
+
+  - set_fact:
+      option_ruby_install_setsystem: "{{'false' | bool}}"
+    when: option_ruby_install_setsystem == "false"
+
+  - set_fact:
+      option_install_nginx: "{{'false' | bool}}"
+    when: option_install_nginx == "false"
+
+  - set_fact:
+      option_install_redis: "{{'false' | bool}}"
+    when: option_install_redis == "false"
+
+  - set_fact:
+      option_install_redis_commander: "{{'false' | bool}}"
+    when: option_install_redis_commander == "false"
+
+  - set_fact:
+      option_install_go: "{{'false' | bool}}"
+    when: option_install_go == "false"
+
+  - set_fact:
+      option_install_git: "{{'false' | bool}}"
+    when: option_install_git == "false"
+
+  - set_fact:
+      option_perform_gitlab_reset: "{{'false' | bool}}"
+    when: option_perform_gitlab_reset == "false"
+
+# --- --------------------------------------------------
+
+  - include: tasks_reset_gitlab_postgres.yml
+    when: option_perform_gitlab_reset
+
   - include: git/main.yml
     when: option_install_git
 
@@ -32,4 +77,11 @@
   - include: nginx/main.yml
     when: option_install_nginx
 
+  # - include: tasks_reset_gitlab_postgres.yml
+  #   when: option_perform_gitlab_reset
+
   - include: tasks_gitlab.yml
+    when: not option_perform_gitlab_reset
+
+  - include: tasks_reset_gitlab.yml
+    when: option_perform_gitlab_reset

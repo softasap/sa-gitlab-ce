@@ -14,6 +14,7 @@
   option_install_redis_commander: false
   option_install_go: true
   option_install_git: true
+  option_perform_gitlab_reset: false
 
 # gitlab
   gitlab_version: "v8.9.1"
@@ -141,6 +142,7 @@
 
   postgresql_listen_addresses: localhost  # * for any address
   postgres_force_change_peer_md5: true
+  postgres_force_change_postgres_local_trust: true  # set to true if you get FATAL: Peer authentication failed for user
 
   postgresql_port: 5432
 
@@ -153,7 +155,7 @@
   #postgres_dev_network_regex: "192\.168\.0\.1\/32"
 
   db_host: localhost
-  db_user: git
+  db_user: gitlab-psql
   db_password: app_password
   db_name: gitlabhq_production
 

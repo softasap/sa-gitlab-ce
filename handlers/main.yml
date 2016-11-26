@@ -1,2 +1,7 @@
 ---
 # handlers file for sa-gitlab-ce
+
+  - name: restart redis
+    service: name=redis-server state=restarted
+    become: yes
+    when: docker_test is not defined

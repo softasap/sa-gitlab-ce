@@ -1,0 +1,14 @@
+---
+
+  - name: Gitlab Reset | Force restart postgres to drop possible connections
+    service: name="postgresql" state="restarted"
+    become: yes
+
+
+  - name: Gitlab Reset | drop gitlab db
+    postgresql_db: name={{db_name}} state=absent
+    tags: db
+
+  - name: Gitlab Reset | create gitlab db
+    postgresql_db: name={{db_name}}
+    tags: db
