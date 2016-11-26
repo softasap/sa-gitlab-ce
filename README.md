@@ -153,3 +153,25 @@ Active users: 1
 
 Checking GitLab ... Finished
 </pre>
+
+
+Problem with Gitlab registry:
+
+Enable regitry debugging in gitlab.rb
+```
+registry['debug_addr'] = "localhost:5001"
+```
+
+Checked the endpoint `curl -v http://localhost:5001/debug/health` for hints
+
+
+Copyright and license
+---------------------
+
+Copyright - Vyacheslav Voronenko
+
+Code licensed under the [BSD 3 clause] (https://opensource.org/licenses/BSD-3-Clause) or the [MIT License] (http://opensource.org/licenses/MIT).
+
+Subscribe for roles updates at [FB] (https://www.facebook.com/SoftAsap/)
+
+
